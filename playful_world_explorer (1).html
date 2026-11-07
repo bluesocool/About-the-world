@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Playful World Explorer 🌍✨</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Fredoka & Quicksand -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: linear-gradient(135deg, #e0f2fe 0%, #fbcfe8 50%, #fef3c7 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, h4, .font-fun {
+      font-family: 'Fredoka', cursive;
+    }
+
+    /* Floating animation for map elements */
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(1deg); }
+    }
+    @keyframes floatFast {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.05); }
+    }
+
+    .animate-float {
+      animation: floatSlow 5s ease-in-out infinite;
+    }
+    .animate-bounce-gentle {
+      animation: floatFast 3s ease-in-out infinite;
+    }
+
+    /* Continent SVG styling & playful hover dynamics */
+    .continent-path {
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform-origin: center;
+      stroke: #ffffff;
+      stroke-width: 2.5;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.08));
+    }
+
+    .continent-path:hover, .continent-path.active {
+      transform: scale(1.03) translateY(-4px);
+      stroke: #ffffff;
+      stroke-width: 4;
+      filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.25));
+    }
+
+    .continent-na { fill: #FF6B6B; }
+    .continent-sa { fill: #4ECDC4; }
+    .continent-eu { fill: #FFE66D; }
+    .continent-af { fill: #FF9F43; }
+    .continent-as { fill: #A8E6CF; }
+    .continent-oc { fill: #FF8B94; }
+    .continent-an { fill: #D6A2E8; }
+
+    .continent-path.dimmed {
+      opacity: 0.25;
+      filter: grayscale(80%);
+    }
+
+    /* Interactive Pin Markers */
+    .pin-marker {
+      cursor: pointer;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .pin-marker:hover {
+      transform: scale(1.3) translateY(-6px);
+    }
+
+    /* Custom Sparkle Particles */
+    .sparkle {
+      position: absolute;
+      pointer-events: none;
+      background: radial-gradient(circle, #fff 10%, transparent 70%);
+      border-radius: 50%;
+      animation: sparkleFade 0.8s ease-out forwards;
+    }
+
+    @keyframes sparkleFade {
+      0% { transform: scale(0) rotate(0deg); opacity: 1; }
+      100% { transform: scale(1.6) rotate(180deg); opacity: 0; }
+    }
+
+    /* Glassmorphism containers */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      border: 3px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    }
+    .glass-button {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      transition: all 0.25s ease;
+    }
+    .glass-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #FF6B6B;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body class="p-3 md:p-6 text-slate-800 relative">
+
+  <!-- Background Floating Decorative Elements -->
+  <div class="fixed top-12 left-10 text-4xl opacity-40 animate-float pointer-events-none select-none">☁️</div>
+  <div class="fixed top-24 right-16 text-5xl opacity-40 animate-float pointer-events-none select-none" style="animation-delay: 1.5s;">🎈</div>
+  <div class="fixed bottom-12 left-20 text-4xl opacity-40 animate-float pointer-events-none select-none" style="animation-delay: 2.5s;">🎨</div>
+  <div class="fixed bottom-20 right-12 text-5xl opacity-40 animate-float pointer-events-none select-none" style="animation-delay: 0.8s;">🚀</div>
+
+  <!-- Header Banner -->
+  <header class="max-w-6xl mx-auto mb-6 text-center">
+    <div class="inline-block glass-card rounded-full px-6 py-2 mb-3 shadow-sm border border-white">
+      <span class="text-sm font-bold text-pink-500 uppercase tracking-wider">✨ Interactive World Trivia ✨</span>
+    </div>
+    <h1 class="text-4xl md:text-6xl font-extrabold text-slate-800 tracking-tight drop-shadow-sm">
+      Playful <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500">World Explorer</span> 🌎
+    </h1>
+    <p class="text-slate-600 font-semibold text-lg max-w-xl mx-auto mt-2">
+      Hover or click around the colorful map to discover mind-blowing fun facts, crazy stats, and secret surprises!
+    </p>
+  </header>
+
+  <!-- Filter & Controls Toolbar -->
+  <section class="max-w-6xl mx-auto mb-6">
+    <div class="glass-card rounded-3xl p-4 flex flex-wrap items-center justify-between gap-4 border-2 border-white">
+      
+      <!-- Filter Buttons -->
+      <div class="flex flex-wrap items-center gap-2" id="filter-buttons">
+        <button data-region="all" class="filter-btn bg-slate-800 text-white px-4 py-2 rounded-2xl font-fun text-sm font-bold shadow-md hover:scale-105 transition-all">
+          🌈 All World
+        </button>
+        <button data-region="na" class="filter-btn bg-red-100 text-red-600 hover:bg-red-500 hover:text-white px-4 py-2 rounded-2xl font-fun text-sm font-bold transition-all">
+          🍔 N. America
+        </button>
+        <button data-region="sa" class="filter-btn bg-teal-100 text-teal-600 hover:bg-teal-500 hover:text-white px-4 py-2 rounded-2xl font-fun text-sm font-bold transition-all">
+          Llamas S. America
+        </button>
+        <button data-region="eu" class="filter-btn bg-yellow-100 text-yellow-700 hover:bg-yellow-400 hover:text-slate-900 px-4 py-2 rounded-2xl font-fun text-sm font-bold transition-all">
+          🏰 Europe
+        </button>
+        <button data-region="af" class="filter-btn bg-orange-100 text-orange-600 hover:bg-orange-500 hover:text-white px-4 py-2 rounded-2xl font-fun text-sm font-bold transition-all">
+          🦁 Africa
+        </button>
+        <button data-region="as" class="filter-btn bg-emerald-100 text-emerald-600 hover:bg-emerald-500 hover:text-white px-4 py-2 rounded-2xl font-fun text-sm font-bold transition-all">
+          🐼 Asia
+        </button>
+        <button data-region="oc" class="filter-btn bg-rose-100 text-rose-600 hover:bg-rose-500 hover:text-white px-4 py-2 rounded-2xl font-fun text-sm font-bold transition-all">
+          🦘 Oceania
+        </button>
+        <button data-region="an" class="filter-btn bg-purple-100 text-purple-600 hover:bg-purple-500 hover:text-white px-4 py-2 rounded-2xl font-fun text-sm font-bold transition-all">
+          🐧 Antarctica
+        </button>
+      </div>
+
+      <!-- Action Utilities -->
+      <div class="flex items-center gap-3">
+        <button id="random-fact-btn" class="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-5 py-2.5 rounded-2xl font-fun font-bold text-sm shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+          <i class="fa-solid fa-dice text-lg"></i> Surprise Me!
+        </button>
+        <button id="sound-toggle-btn" class="glass-button w-11 h-11 rounded-2xl flex items-center justify-center text-slate-700 font-bold hover:text-pink-500">
+          <i class="fa-solid fa-volume-high text-lg" id="sound-icon"></i>
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Main Display Area: Map + Fact Card -->
+  <main class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+    <!-- Interactive SVG Map Canvas (7 cols) -->
+    <div class="lg:col-span-7 glass-card rounded-3xl p-4 md:p-6 relative overflow-hidden border-2 border-white">
+      <div class="flex items-center justify-between mb-3 px-2">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest"><i class="fa-solid fa-hand-pointer mr-1"></i> Click or hover on continents</span>
+        <span id="hover-tooltip" class="text-xs font-fun font-bold bg-white/90 text-slate-700 px-3 py-1 rounded-full shadow-sm border border-slate-200 opacity-0 transition-opacity">Continent Name</span>
+      </div>
+
+      <!-- SVG Map -->
+      <div class="w-full h-auto aspect-[16/10] relative flex items-center justify-center">
+        <svg id="world-map" viewBox="0 0 1000 550" class="w-full h-full drop-shadow-md select-none">
+          <!-- Ocean Background Subtle Waves Pattern -->
+          <defs>
+            <linearGradient id="oceanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#e0f2fe" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#bae6fd" stop-opacity="0.8"/>
+            </linearGradient>
+          </defs>
+          <rect width="1000" height="550" rx="24" fill="url(#oceanGrad)" />
+
+          <!-- North America -->
+          <path id="path-na" data-region="na" data-name="North America" class="continent-path continent-na" 
+                d="M 120,70 L 220,50 L 320,60 L 300,140 L 260,180 L 240,240 L 180,260 L 130,220 L 80,180 L 70,120 Z" />
+
+          <!-- South America -->
+          <path id="path-sa" data-region="sa" data-name="South America" class="continent-path continent-sa" 
+                d="M 250,280 L 330,290 L 360,350 L 320,440 L 280,480 L 250,420 L 240,340 Z" />
+
+          <!-- Europe -->
+          <path id="path-eu" data-region="eu" data-name="Europe" class="continent-path continent-eu" 
+                d="M 450,70 L 580,60 L 600,130 L 530,170 L 460,160 L 440,110 Z" />
+
+          <!-- Africa -->
+          <path id="path-af" data-region="af" data-name="Africa" class="continent-path continent-af" 
+                d="M 440,190 L 570,190 L 610,250 L 590,360 L 520,420 L 460,370 L 430,280 Z" />
+
+          <!-- Asia -->
+          <path id="path-as" data-region="as" data-name="Asia" class="continent-path continent-as" 
+                d="M 610,60 L 880,50 L 920,130 L 850,240 L 750,280 L 650,220 L 610,140 Z" />
+
+          <!-- Oceania / Australia -->
+          <path id="path-oc" data-region="oc" data-name="Oceania" class="continent-path continent-oc" 
+                d="M 760,330 L 890,320 L 910,410 L 840,460 L 760,420 Z" />
+
+          <!-- Antarctica -->
+          <path id="path-an" data-region="an" data-name="Antarctica" class="continent-path continent-an" 
+                d="M 180,510 L 840,510 L 800,540 L 220,540 Z" />
+
+          <!-- Interactive Highlight Pins -->
+          <g id="map-pins">
+            <!-- Pin: North America -->
+            <g class="pin-marker" data-region="na" transform="translate(190, 150)">
+              <circle r="14" fill="#FFFFFF" class="drop-shadow-md"/>
+              <text text-anchor="middle" dy="5" font-size="14">🍕</text>
+            </g>
+            <!-- Pin: South America -->
+            <g class="pin-marker" data-region="sa" transform="translate(295, 360)">
+              <circle r="14" fill="#FFFFFF" class="drop-shadow-md"/>
+              <text text-anchor="middle" dy="5" font-size="14">🦙</text>
+            </g>
+            <!-- Pin: Europe -->
+            <g class="pin-marker" data-region="eu" transform="translate(510, 115)">
+              <circle r="14" fill="#FFFFFF" class="drop-shadow-md"/>
+              <text text-anchor="middle" dy="5" font-size="14">🏰</text>
+            </g>
+            <!-- Pin: Africa -->
+            <g class="pin-marker" data-region="af" transform="translate(510, 290)">
+              <circle r="14" fill="#FFFFFF" class="drop-shadow-md"/>
+              <text text-anchor="middle" dy="5" font-size="14">🦁</text>
+            </g>
+            <!-- Pin: Asia -->
+            <g class="pin-marker" data-region="as" transform="translate(750, 150)">
+              <circle r="14" fill="#FFFFFF" class="drop-shadow-md"/>
+              <text text-anchor="middle" dy="5" font-size="14">🐼</text>
+            </g>
+            <!-- Pin: Oceania -->
+            <g class="pin-marker" data-region="oc" transform="translate(830, 380)">
+              <circle r="14" fill="#FFFFFF" class="drop-shadow-md"/>
+              <text text-anchor="middle" dy="5" font-size="14">🦘</text>
+            </g>
+            <!-- Pin: Antarctica -->
+            <g class="pin-marker" data-region="an" transform="translate(500, 525)">
+              <circle r="12" fill="#FFFFFF" class="drop-shadow-md"/>
+              <text text-anchor="middle" dy="4" font-size="12">🐧</text>
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Quick Tips Legend -->
+      <div class="mt-4 flex flex-wrap items-center justify-between text-xs font-semibold text-slate-500 gap-2 border-t border-slate-200/60 pt-3">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-pink-400"></span> 7 Continents
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-teal-400"></span> Interactive Hotspots
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-yellow-400"></span> Fun Audio Effects
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side: Fact Display Card + Interactive Mini Game (5 cols) -->
+    <div class="lg:col-span-5 flex flex-col gap-6">
+
+      <!-- Dynamic Continent Info Card -->
+      <div id="fact-card" class="glass-card rounded-3xl p-6 border-2 border-white transition-all duration-300 transform">
+        <!-- Region Badge & Header -->
+        <div class="flex items-center justify-between mb-4">
+          <span id="card-badge" class="px-3 py-1 bg-red-100 text-red-600 rounded-full text-xs font-fun font-bold uppercase tracking-wide">
+            North America
+          </span>
+          <div class="flex gap-1" id="star-rating">
+            <i class="fa-solid fa-star text-yellow-400 text-xs"></i>
+            <i class="fa-solid fa-star text-yellow-400 text-xs"></i>
+            <i class="fa-solid fa-star text-yellow-400 text-xs"></i>
+          </div>
+        </div>
+
+        <!-- Main Title & Icon -->
+        <div class="flex items-center gap-4 mb-4">
+          <div id="card-icon-box" class="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center text-3xl text-white shadow-md flex-shrink-0">
+            🌎
+          </div>
+          <div>
+            <h2 id="card-title" class="text-2xl font-bold text-slate-800 leading-tight">North America</h2>
+            <p id="card-subtitle" class="text-xs text-slate-500 font-semibold">Home to 23 diverse countries!</p>
+          </div>
+        </div>
+
+        <!-- Fun Facts List -->
+        <div class="space-y-3 mb-6">
+          <div class="p-3 rounded-2xl bg-white/70 border border-slate-100 shadow-sm flex items-start gap-3">
+            <span class="text-xl">📍</span>
+            <div>
+              <h4 class="text-xs font-bold text-slate-400 uppercase">Top Landmark</h4>
+              <p id="fact-landmark" class="text-sm font-bold text-slate-700">The Grand Canyon & Niagara Falls</p>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-2xl bg-white/70 border border-slate-100 shadow-sm flex items-start gap-3">
+            <span class="text-xl">💡</span>
+            <div>
+              <h4 class="text-xs font-bold text-slate-400 uppercase">Mind-Blowing Trivia</h4>
+              <p id="fact-trivia" class="text-sm font-medium text-slate-600">Canada has more lakes than all of the other world's countries combined!</p>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-2xl bg-white/70 border border-slate-100 shadow-sm flex items-start gap-3">
+            <span class="text-xl">🐻</span>
+            <div>
+              <h4 class="text-xs font-bold text-slate-400 uppercase">Native Wildlife</h4>
+              <p id="fact-wildlife" class="text-sm font-medium text-slate-600">Grizzly Bears, Bald Eagles, and Monarch Butterflies.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Stats Footer Grid -->
+        <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-200/60">
+          <div class="bg-pink-50/80 p-2.5 rounded-xl text-center">
+            <span class="block text-xs font-bold text-pink-400 uppercase">Est. Population</span>
+            <span id="stat-pop" class="text-base font-fun font-bold text-pink-600">592 Million</span>
+          </div>
+          <div class="bg-purple-50/80 p-2.5 rounded-xl text-center">
+            <span class="block text-xs font-bold text-purple-400 uppercase">Climate Vibe</span>
+            <span id="stat-climate" class="text-base font-fun font-bold text-purple-600">Arctic to Tropical</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Mini Quiz Widget -->
+      <div class="glass-card rounded-3xl p-5 border-2 border-white relative overflow-hidden">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-fun font-bold text-base text-slate-800 flex items-center gap-2">
+            <span>🧩</span> Quick World Quiz
+          </h3>
+          <span id="quiz-score" class="text-xs font-bold bg-indigo-100 text-indigo-600 px-2.5 py-1 rounded-full">Score: 0</span>
+        </div>
+        <p id="quiz-question" class="text-xs md:text-sm font-semibold text-slate-600 mb-3">
+          Which continent is home to the Amazon Rainforest?
+        </p>
+        <div id="quiz-options" class="grid grid-cols-2 gap-2">
+          <!-- Options dynamically rendered -->
+        </div>
+        <div id="quiz-feedback" class="mt-2 text-xs font-bold text-center h-4 text-emerald-600"></div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- JavaScript App Logic -->
+  <script>
+    // Data Structure for World Regions
+    const worldData = {
+      na: {
+        name: "North America",
+        badge: "🍔 North America",
+        badgeColor: "bg-red-100 text-red-600",
+        gradient: "from-red-400 to-pink-500",
+        icon: "🗽",
+        subtitle: "Third largest continent by land area!",
+        landmark: "The Grand Canyon & Statue of Liberty",
+        trivia: "Mexico introduced chocolate, corn, and chilies to the entire world!",
+        wildlife: "Grizzly Bears, Bald Eagles, and Monarch Butterflies",
+        pop: "592 Million",
+        climate: "Frozen Tundra to Sunny Tropics",
+        soundFreq: 320
+      },
+      sa: {
+        name: "South America",
+        badge: "🦙 South America",
+        badgeColor: "bg-teal-100 text-teal-600",
+        gradient: "from-teal-400 to-emerald-500",
+        icon: "🦜",
+        subtitle: "Home of the world's largest rainforest!",
+        landmark: "Machu Picchu & Christ the Redeemer",
+        trivia: "The Amazon River carries more water than the world's next 7 largest rivers combined!",
+        wildlife: "Jaguars, Pink River Dolphins, and Sloths",
+        pop: "430 Million",
+        climate: "Humid Rainforest & High Andes",
+        soundFreq: 380
+      },
+      eu: {
+        name: "Europe",
+        badge: "🏰 Europe",
+        badgeColor: "bg-yellow-100 text-yellow-700",
+        gradient: "from-amber-400 to-yellow-500",
+        icon: "🏰",
+        subtitle: "The continent with over 40 distinct countries!",
+        landmark: "Eiffel Tower & Roman Colosseum",
+        trivia: "Iceland has no mosquitoes at all due to its unique oceanic climate!",
+        wildlife: "Alpine Ibex, Brown Bears, and Red Foxes",
+        pop: "745 Million",
+        climate: "Temperate Maritime & Continental",
+        soundFreq: 440
+      },
+      af: {
+        name: "Africa",
+        badge: "🦁 Africa",
+        badgeColor: "bg-orange-100 text-orange-600",
+        gradient: "from-orange-400 to-amber-500",
+        icon: "🌍",
+        subtitle: "The cradle of humankind with over 1,500 languages!",
+        landmark: "Pyramids of Giza & Victoria Falls",
+        trivia: "The Sahara Desert is larger than the entire contiguous United States!",
+        wildlife: "Lions, African Elephants, and Cheetahes",
+        pop: "1.4 Billion",
+        climate: "Vast Deserts to Savannas",
+        soundFreq: 290
+      },
+      as: {
+        name: "Asia",
+        badge: "🐼 Asia",
+        badgeColor: "bg-emerald-100 text-emerald-600",
+        gradient: "from-emerald-400 to-teal-500",
+        icon: "🏯",
+        subtitle: "The largest continent in both size and population!",
+        landmark: "Great Wall of China & Taj Mahal",
+        trivia: "Mount Everest grows about 4 millimeters higher every single year!",
+        wildlife: "Giant Pandas, Bengal Tigers, and Orangutans",
+        pop: "4.7 Billion",
+        climate: "Sub-zero Siberia to Tropical Monsoons",
+        soundFreq: 520
+      },
+      oc: {
+        name: "Oceania",
+        badge: "🦘 Oceania",
+        badgeColor: "bg-rose-100 text-rose-600",
+        gradient: "from-rose-400 to-pink-500",
+        icon: "🦘",
+        subtitle: "Thousands of tropical islands across the Pacific!",
+        landmark: "Sydney Opera House & Great Barrier Reef",
+        trivia: "Australia has more kangaroos than human residents!",
+        wildlife: "Koalas, Kangaroos, and Platypuses",
+        pop: "45 Million",
+        climate: "Outback Desert to Tropical Coral Isles",
+        soundFreq: 490
+      },
+      an: {
+        name: "Antarctica",
+        badge: "🐧 Antarctica",
+        badgeColor: "bg-purple-100 text-purple-600",
+        gradient: "from-indigo-400 to-purple-500",
+        icon: "❄️",
+        subtitle: "The coldest, windiest, and driest continent on Earth!",
+        landmark: "Mount Erebus & Ice Sheet Plateau",
+        trivia: "Antarctica is technically a desert because it receives very little precipitation!",
+        wildlife: "Emperor Penguins, Weddell Seals, and Orcas",
+        pop: "1,000 (Researchers)",
+        climate: "Extreme Polar Ice Cap",
+        soundFreq: 240
+      }
+    };
+
+    // Quiz Questions Data
+    const quizData = [
+      {
+        q: "Which continent is home to the Amazon Rainforest?",
+        options: ["Africa", "South America", "Asia", "Europe"],
+        answer: 1
+      },
+      {
+        q: "Where would you find wild Emperor Penguins?",
+        options: ["North America", "Oceania", "Antarctica", "Europe"],
+        answer: 2
+      },
+      {
+        q: "Which continent has the Great Wall and Mount Everest?",
+        options: ["Asia", "Africa", "South America", "North America"],
+        answer: 0
+      },
+      {
+        q: "Where can you visit the Eiffel Tower & Roman Colosseum?",
+        options: ["Oceania", "Europe", "Asia", "South America"],
+        answer: 1
+      }
+    ];
+
+    // Web Audio Synthesizer Sound Generator
+    let soundEnabled = true;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function playPopSound(freq = 400) {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.5, audioCtx.currentTime + 0.08);
+
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.08);
+      } catch (e) {
+        // Audio fallback handling
+      }
+    }
+
+    // Sparkle Particle Effect
+    function createSparkle(x, y) {
+      const sparkle = document.createElement('div');
+      sparkle.className = 'sparkle';
+      const size = Math.random() * 14 + 8;
+      sparkle.style.width = `${size}px`;
+      sparkle.style.height = `${size}px`;
+      sparkle.style.left = `${x - size / 2}px`;
+      sparkle.style.top = `${y - size / 2}px`;
+      
+      const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#FF9F43', '#A8E6CF', '#D6A2E8'];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      sparkle.style.boxShadow = `0 0 10px ${randomColor}, 0 0 20px ${randomColor}`;
+      
+      document.body.appendChild(sparkle);
+      setTimeout(() => sparkle.remove(), 800);
+    }
+
+    // Main App Initialization
+    document.addEventListener('DOMContentLoaded', () => {
+      const paths = document.querySelectorAll('.continent-path');
+      const pins = document.querySelectorAll('.pin-marker');
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      const tooltip = document.getElementById('hover-tooltip');
+      const randomBtn = document.getElementById('random-fact-btn');
+      const soundBtn = document.getElementById('sound-toggle-btn');
+      const soundIcon = document.getElementById('sound-icon');
+
+      let currentQuizIndex = 0;
+      let score = 0;
+
+      // Update Card UI Display
+      function updateCard(regionKey) {
+        const data = worldData[regionKey];
+        if (!data) return;
+
+        const card = document.getElementById('fact-card');
+        card.classList.add('scale-95', 'opacity-80');
+
+        setTimeout(() => {
+          document.getElementById('card-badge').className = `px-3 py-1 rounded-full text-xs font-fun font-bold uppercase tracking-wide ${data.badgeColor}`;
+          document.getElementById('card-badge').innerText = data.badge;
+
+          const iconBox = document.getElementById('card-icon-box');
+          iconBox.className = `w-16 h-16 rounded-2xl bg-gradient-to-br ${data.gradient} flex items-center justify-center text-3xl text-white shadow-md flex-shrink-0`;
+          iconBox.innerText = data.icon;
+
+          document.getElementById('card-title').innerText = data.name;
+          document.getElementById('card-subtitle').innerText = data.subtitle;
+          document.getElementById('fact-landmark').innerText = data.landmark;
+          document.getElementById('fact-trivia').innerText = data.trivia;
+          document.getElementById('fact-wildlife').innerText = data.wildlife;
+          document.getElementById('stat-pop').innerText = data.pop;
+          document.getElementById('stat-climate').innerText = data.climate;
+
+          card.classList.remove('scale-95', 'opacity-80');
+        }, 150);
+
+        // Highlight map path
+        paths.forEach(p => {
+          if (p.getAttribute('data-region') === regionKey) {
+            p.classList.add('active');
+          } else {
+            p.classList.remove('active');
+          }
+        });
+
+        playPopSound(data.soundFreq);
+      }
+
+      // Event Listeners for Map Paths
+      paths.forEach(path => {
+        path.addEventListener('mouseenter', (e) => {
+          const name = path.getAttribute('data-name');
+          tooltip.innerText = name;
+          tooltip.classList.remove('opacity-0');
+          createSparkle(e.clientX, e.clientY);
+        });
+
+        path.addEventListener('mousemove', (e) => {
+          // Tooltip position subtle updates if needed
+        });
+
+        path.addEventListener('mouseleave', () => {
+          tooltip.classList.add('opacity-0');
+        });
+
+        path.addEventListener('click', (e) => {
+          const region = path.getAttribute('data-region');
+          updateCard(region);
+          createSparkle(e.clientX, e.clientY);
+        });
+      });
+
+      // Pins click events
+      pins.forEach(pin => {
+        pin.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const region = pin.getAttribute('data-region');
+          updateCard(region);
+          createSparkle(e.clientX, e.clientY);
+        });
+      });
+
+      // Filter Continent Buttons
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const region = btn.getAttribute('data-region');
+          
+          filterBtns.forEach(b => b.classList.remove('ring-4', 'ring-pink-300'));
+          btn.classList.add('ring-4', 'ring-pink-300');
+
+          if (region === 'all') {
+            paths.forEach(p => p.classList.remove('dimmed', 'active'));
+            updateCard('na');
+          } else {
+            paths.forEach(p => {
+              if (p.getAttribute('data-region') === region) {
+                p.classList.remove('dimmed');
+              } else {
+                p.classList.add('dimmed');
+              }
+            });
+            updateCard(region);
+          }
+          playPopSound(450);
+        });
+      });
+
+      // Random Fact Generator Button
+      randomBtn.addEventListener('click', (e) => {
+        const keys = Object.keys(worldData);
+        const randomKey = keys[Math.floor(Math.random() * keys.length)];
+        updateCard(randomKey);
+        createSparkle(e.clientX, e.clientY);
+      });
+
+      // Sound Toggle Button
+      soundBtn.addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        if (soundEnabled) {
+          soundIcon.className = "fa-solid fa-volume-high text-lg text-pink-500";
+          playPopSound(600);
+        } else {
+          soundIcon.className = "fa-solid fa-volume-xmark text-lg text-slate-400";
+        }
+      });
+
+      // Initialize Interactive Quiz Logic
+      function loadQuiz() {
+        const current = quizData[currentQuizIndex];
+        document.getElementById('quiz-question').innerText = current.q;
+        const optionsContainer = document.getElementById('quiz-options');
+        optionsContainer.innerHTML = '';
+        document.getElementById('quiz-feedback').innerText = '';
+
+        current.options.forEach((opt, idx) => {
+          const btn = document.createElement('button');
+          btn.className = "w-full bg-white/80 hover:bg-indigo-50 border border-slate-200 text-slate-700 py-1.5 px-2 rounded-xl text-xs font-bold transition-all shadow-sm";
+          btn.innerText = opt;
+          btn.addEventListener('click', () => checkAnswer(idx));
+          optionsContainer.appendChild(btn);
+        });
+      }
+
+      function checkAnswer(selectedIndex) {
+        const current = quizData[currentQuizIndex];
+        const feedback = document.getElementById('quiz-feedback');
+
+        if (selectedIndex === current.answer) {
+          score += 10;
+          feedback.innerText = "🎉 Correct! You're awesome!";
+          feedback.className = "mt-2 text-xs font-bold text-center h-4 text-emerald-600";
+          playPopSound(650);
+        } else {
+          feedback.innerText = "❌ Oops! Try the next one!";
+          feedback.className = "mt-2 text-xs font-bold text-center h-4 text-rose-500";
+          playPopSound(200);
+        }
+
+        document.getElementById('quiz-score').innerText = `Score: ${score}`;
+
+        setTimeout(() => {
+          currentQuizIndex = (currentQuizIndex + 1) % quizData.length;
+          loadQuiz();
+        }, 1200);
+      }
+
+      // Initial Load
+      updateCard('na');
+      loadQuiz();
+    });
+  </script>
+</body>
+</html>
